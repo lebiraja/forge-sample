@@ -124,18 +124,22 @@ export function DocEditor({ doc }: DocEditorProps) {
   ]
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full" style={{ background: 'var(--bg)' }}>
       {/* Header */}
-      <div className="border-b border-[#222222] px-4 py-3 flex items-center gap-3">
+      <div
+        className="px-4 py-3 flex items-center gap-3"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
         <Input
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="Document title"
-          className="text-base font-medium bg-transparent border-0 px-0 focus:ring-0 focus:border-0 text-white placeholder:text-[#333333]"
+          className="text-base font-medium border-0 px-0 focus:ring-0 focus:border-0"
+          style={{ background: 'transparent', border: 'none', boxShadow: 'none' }}
         />
         <div className="flex items-center gap-2 shrink-0">
           {saveStatus === 'saving' && (
-            <span className="text-xs text-[#666666]">Saving...</span>
+            <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Saving...</span>
           )}
           {saveStatus === 'saved' && (
             <span className="text-xs text-green-500">Saved</span>
@@ -154,13 +158,17 @@ export function DocEditor({ doc }: DocEditorProps) {
       </div>
 
       {/* Tags */}
-      <div className="border-b border-[#222222] px-4 py-2 flex items-center gap-2">
-        <span className="text-xs text-[#444444] shrink-0">Tags</span>
+      <div
+        className="px-4 py-2 flex items-center gap-2"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
+        <span className="text-xs shrink-0" style={{ color: 'var(--text-faint)' }}>Tags</span>
         <Input
           value={tagsInput}
           onChange={(e) => setTagsInput(e.target.value)}
           placeholder="api, backend, notes (comma-separated)"
-          className="border-0 bg-transparent text-xs px-0 focus:ring-0 h-6 text-[#888888]"
+          className="border-0 text-xs px-0 focus:ring-0 h-6"
+          style={{ background: 'transparent', border: 'none', boxShadow: 'none', color: 'var(--text-muted)' }}
         />
         {parsedTags.length > 0 && (
           <div className="flex gap-1 shrink-0">
@@ -172,14 +180,26 @@ export function DocEditor({ doc }: DocEditorProps) {
       </div>
 
       {/* Toolbar */}
-      <div className="border-b border-[#222222] px-3 py-1.5 flex items-center gap-0.5">
+      <div
+        className="px-3 py-1.5 flex items-center gap-0.5"
+        style={{ borderBottom: '1px solid var(--border)' }}
+      >
         {toolbarActions.map(({ icon: Icon, label, action }) => (
           <button
             key={label}
             onClick={action}
             title={label}
             type="button"
-            className="p-1.5 rounded text-[#666666] hover:text-white hover:bg-[#1a1a1a] transition-colors"
+            className="p-1.5 rounded transition-colors"
+            style={{ color: 'var(--text-muted)' }}
+            onMouseEnter={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.background = 'var(--surface-2)'
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text)'
+            }}
+            onMouseLeave={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--text-muted)'
+            }}
           >
             <Icon size={14} />
           </button>
@@ -188,23 +208,29 @@ export function DocEditor({ doc }: DocEditorProps) {
 
       {/* Split pane */}
       <div className="flex-1 flex overflow-hidden">
-        <div className="flex-1 border-r border-[#222222]">
+        <div className="flex-1" style={{ borderRight: '1px solid var(--border)' }}>
           <textarea
             ref={textareaRef}
             value={content}
             onChange={(e) => setContent(e.target.value)}
             placeholder="Start writing in Markdown..."
-            className="w-full h-full resize-none bg-transparent text-[#e5e5e5] placeholder:text-[#333333] font-mono text-sm leading-relaxed p-4 outline-none"
+            className="w-full h-full resize-none font-mono text-sm leading-relaxed p-4 outline-none"
+            style={{
+              background: 'var(--bg)',
+              color: 'var(--text)',
+            }}
             spellCheck={false}
           />
         </div>
-        <div className="flex-1 overflow-y-auto p-4">
+        <div className="flex-1 overflow-y-auto p-4" style={{ background: 'var(--surface)' }}>
           {content ? (
             <div className="prose-dark max-w-none">
               <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
             </div>
           ) : (
-            <p className="text-[#333333] text-sm italic">Preview will appear here</p>
+            <p className="text-sm italic" style={{ color: 'var(--text-faint)' }}>
+              Preview will appear here
+            </p>
           )}
         </div>
       </div>

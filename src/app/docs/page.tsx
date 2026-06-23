@@ -31,19 +31,22 @@ export default async function DocsPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
       <Navbar userEmail={session.user.email} />
       <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100vh - 48px)' }}>
         <Sidebar docs={docList} />
         <main className="flex-1 flex items-center justify-center">
           <div className="text-center">
-            <div className="w-12 h-12 rounded-xl bg-[#111111] border border-[#222222] flex items-center justify-center mx-auto mb-4">
-              <FileText size={20} className="text-[#444444]" />
+            <div
+              className="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4"
+              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+            >
+              <FileText size={20} style={{ color: 'var(--text-faint)' }} />
             </div>
-            <h2 className="text-[#e5e5e5] font-medium mb-1">
+            <h2 className="font-medium mb-1" style={{ color: 'var(--text)' }}>
               {docList.length === 0 ? 'No documents yet' : 'Select a document'}
             </h2>
-            <p className="text-[#444444] text-sm mb-4">
+            <p className="text-sm mb-4" style={{ color: 'var(--text-faint)' }}>
               {docList.length === 0
                 ? 'Create your first document to get started'
                 : 'Pick one from the sidebar or create a new one'}

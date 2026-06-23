@@ -26,7 +26,7 @@ export default async function NewDocPage() {
   }))
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex flex-col">
+    <div className="min-h-screen flex flex-col" style={{ background: 'var(--bg)' }}>
       <Navbar userEmail={session.user.email} />
       <div className="flex flex-1 overflow-hidden" style={{ height: 'calc(100vh - 48px)' }}>
         <Sidebar docs={docList} />

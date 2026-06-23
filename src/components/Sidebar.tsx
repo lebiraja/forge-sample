@@ -22,8 +22,11 @@ export function Sidebar({ docs }: SidebarProps) {
   )
 
   return (
-    <aside className="w-[260px] shrink-0 border-r border-[#222222] h-full flex flex-col bg-[#0a0a0a]">
-      <div className="p-3 border-b border-[#222222]">
+    <aside
+      className="w-[260px] shrink-0 h-full flex flex-col"
+      style={{ borderRight: '1px solid var(--border)', background: 'var(--bg)' }}
+    >
+      <div className="p-3" style={{ borderBottom: '1px solid var(--border)' }}>
         <Link href="/docs/new">
           <Button className="w-full gap-2" size="sm">
             <PlusIcon size={14} />
@@ -32,11 +35,12 @@ export function Sidebar({ docs }: SidebarProps) {
         </Link>
       </div>
 
-      <div className="p-3 border-b border-[#222222]">
+      <div className="p-3" style={{ borderBottom: '1px solid var(--border)' }}>
         <div className="relative">
           <SearchIcon
             size={13}
-            className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#444444] pointer-events-none"
+            className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+            style={{ color: 'var(--text-faint)' }}
           />
           <Input
             value={search}
@@ -49,7 +53,7 @@ export function Sidebar({ docs }: SidebarProps) {
 
       <nav className="flex-1 overflow-y-auto p-1.5">
         {filtered.length === 0 ? (
-          <p className="text-xs text-[#444444] px-2 py-3 text-center">
+          <p className="text-xs px-2 py-3 text-center" style={{ color: 'var(--text-faint)' }}>
             {search ? 'No results' : 'No documents yet'}
           </p>
         ) : (
@@ -64,15 +68,16 @@ export function Sidebar({ docs }: SidebarProps) {
                     href={href}
                     className={cn(
                       'flex flex-col gap-0.5 px-2.5 py-2 rounded-md text-sm transition-colors group',
-                      isActive
-                        ? 'bg-[#1a1130] text-white'
-                        : 'text-[#999999] hover:bg-[#141414] hover:text-[#e5e5e5]'
                     )}
+                    style={{
+                      background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
+                      color: isActive ? 'var(--sidebar-active-text)' : 'var(--text-muted)',
+                    }}
                   >
                     <span className="truncate text-[13px] font-medium leading-tight">
                       {doc.title}
                     </span>
-                    <span className="text-[11px] text-[#555555]">
+                    <span className="text-[11px]" style={{ color: 'var(--text-faint)' }}>
                       {formatRelativeTime(doc.updatedAt)}
                     </span>
                   </Link>

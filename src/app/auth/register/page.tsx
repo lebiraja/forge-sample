@@ -37,16 +37,22 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center px-4">
+    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg)' }}>
       <div className="w-full max-w-sm">
         <div className="mb-8">
-          <h1 className="text-2xl font-semibold text-white tracking-tight">Forge Docs</h1>
-          <p className="text-[#666666] mt-1 text-sm">Create your workspace</p>
+          <h1 className="text-2xl font-semibold tracking-tight" style={{ color: 'var(--text)' }}>
+            Forge Docs
+          </h1>
+          <p className="mt-1 text-sm" style={{ color: 'var(--text-muted)' }}>
+            Create your workspace
+          </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm text-[#999999] mb-1.5">Name</label>
+            <label className="block text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              Name
+            </label>
             <Input
               type="text"
               value={name}
@@ -58,7 +64,9 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-[#999999] mb-1.5">Email</label>
+            <label className="block text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              Email
+            </label>
             <Input
               type="email"
               value={email}
@@ -70,7 +78,9 @@ export default function RegisterPage() {
           </div>
 
           <div>
-            <label className="block text-sm text-[#999999] mb-1.5">Password</label>
+            <label className="block text-sm mb-1.5" style={{ color: 'var(--text-muted)' }}>
+              Password
+            </label>
             <Input
               type="password"
               value={password}
@@ -82,18 +92,20 @@ export default function RegisterPage() {
             />
           </div>
 
-          {error && (
-            <p className="text-red-400 text-sm">{error}</p>
-          )}
+          {error && <p className="text-red-400 text-sm">{error}</p>}
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading ? 'Creating account...' : 'Create account'}
           </Button>
         </form>
 
-        <p className="text-[#666666] text-sm mt-6">
+        <p className="text-sm mt-6" style={{ color: 'var(--text-muted)' }}>
           Already have an account?{' '}
-          <Link href="/auth/login" className="text-[#a78bfa] hover:text-white transition-colors">
+          <Link
+            href="/auth/login"
+            className="transition-colors"
+            style={{ color: 'var(--accent-text)' }}
+          >
             Sign in
           </Link>
         </p>
