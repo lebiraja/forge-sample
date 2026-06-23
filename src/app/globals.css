@@ -1,0 +1,141 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #0a0a0a;
+  --surface: #111111;
+  --border: #222222;
+  --text: #e5e5e5;
+  --muted: #666666;
+  --accent: #7c3aed;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  background-color: var(--bg);
+  color: var(--text);
+  font-family: var(--font-inter), system-ui, sans-serif;
+  height: 100%;
+}
+
+::selection {
+  background-color: rgba(124, 58, 237, 0.3);
+}
+
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 2px;
+}
+
+/* Markdown preview styles */
+.prose-dark {
+  color: #e5e5e5;
+}
+
+.prose-dark h1,
+.prose-dark h2,
+.prose-dark h3,
+.prose-dark h4 {
+  color: #ffffff;
+  font-weight: 600;
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose-dark h1 { font-size: 1.875rem; }
+.prose-dark h2 { font-size: 1.5rem; }
+.prose-dark h3 { font-size: 1.25rem; }
+
+.prose-dark p {
+  margin-bottom: 1em;
+  line-height: 1.75;
+}
+
+.prose-dark ul,
+.prose-dark ol {
+  padding-left: 1.5em;
+  margin-bottom: 1em;
+}
+
+.prose-dark li {
+  margin-bottom: 0.25em;
+  line-height: 1.75;
+}
+
+.prose-dark code {
+  background: #1a1a1a;
+  border: 1px solid #2a2a2a;
+  border-radius: 4px;
+  padding: 0.1em 0.4em;
+  font-size: 0.875em;
+  font-family: ui-monospace, monospace;
+  color: #c4b5fd;
+}
+
+.prose-dark pre {
+  background: #111111;
+  border: 1px solid #222222;
+  border-radius: 6px;
+  padding: 1rem;
+  overflow-x: auto;
+  margin-bottom: 1em;
+}
+
+.prose-dark pre code {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.875rem;
+  color: #e5e5e5;
+}
+
+.prose-dark blockquote {
+  border-left: 3px solid #7c3aed;
+  padding-left: 1em;
+  margin: 1em 0;
+  color: #999;
+  font-style: italic;
+}
+
+.prose-dark a {
+  color: #a78bfa;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.prose-dark table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 1em;
+}
+
+.prose-dark th,
+.prose-dark td {
+  border: 1px solid #222222;
+  padding: 0.5em 0.75em;
+}
+
+.prose-dark th {
+  background: #111111;
+  font-weight: 600;
+}
+
+.prose-dark hr {
+  border: none;
+  border-top: 1px solid #222222;
+  margin: 2em 0;
+}

@@ -1,0 +1,213 @@
+'use client'
+
+import { useState, useCallback, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
+import {
+  Bold,
+  Italic,
+  Heading1,
+  Heading2,
+  Link2,
+  Code,
+  CodeSquare,
+  Save,
+} from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Badge } from '@/components/ui/badge'
+import { type IDoc } from '@/types'
+
+interface DocEditorProps {
+  doc?: IDoc
+}
+
+type SaveStatus = 'idle' | 'saving' | 'saved'
+
+export function DocEditor({ doc }: DocEditorProps) {
+  const router = useRouter()
+  const [title, setTitle] = useState(doc?.title ?? '')
+  const [content, setContent] = useState(doc?.content ?? '')
+  const [tagsInput, setTagsInput] = useState(doc?.tags.join(', ') ?? '')
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
+  const [error, setError] = useState('')
+  const textareaRef = useRef<HTMLTextAreaElement>(null)
+
+  const parsedTags = tagsInput
+    .split(',')
+    .map((t) => t.trim())
+    .filter(Boolean)
+
+  const insertMarkdown = useCallback(
+    (prefix: string, suffix = '') => {
+      const textarea = textareaRef.current
+      if (!textarea) return
+
+      const start = textarea.selectionStart
+      const end = textarea.selectionEnd
+      const selected = content.slice(start, end)
+      const replacement = `${prefix}${selected || 'text'}${suffix}`
+
+      setContent(content.slice(0, start) + replacement + content.slice(end))
+
+      setTimeout(() => {
+        textarea.focus()
+        textarea.setSelectionRange(
+          start + prefix.length,
+          start + prefix.length + (selected || 'text').length
+        )
+      }, 0)
+    },
+    [content]
+  )
+
+  async function handleSave() {
+    if (!title.trim()) {
+      setError('Title is required')
+      return
+    }
+
+    setError('')
+    setSaveStatus('saving')
+
+    const payload = { title: title.trim(), content, tags: parsedTags }
+
+    try {
+      let res: Response
+      if (doc?._id) {
+        res = await fetch(`/api/docs/${doc._id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      } else {
+        res = await fetch('/api/docs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+      }
+
+      const data = (await res.json()) as { data?: IDoc; error?: string }
+
+      if (!res.ok) {
+        setError(data.error ?? 'Save failed')
+        setSaveStatus('idle')
+        return
+      }
+
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 2000)
+
+      if (!doc?._id && data.data?._id) {
+        router.push(`/docs/${data.data._id}/edit`)
+      }
+    } catch {
+      setError('Save failed')
+      setSaveStatus('idle')
+    }
+  }
+
+  const toolbarActions = [
+    { icon: Bold, label: 'Bold', action: () => insertMarkdown('**', '**') },
+    { icon: Italic, label: 'Italic', action: () => insertMarkdown('_', '_') },
+    { icon: Heading1, label: 'H1', action: () => insertMarkdown('# ') },
+    { icon: Heading2, label: 'H2', action: () => insertMarkdown('## ') },
+    { icon: Link2, label: 'Link', action: () => insertMarkdown('[', '](url)') },
+    { icon: Code, label: 'Code', action: () => insertMarkdown('`', '`') },
+    {
+      icon: CodeSquare,
+      label: 'Code block',
+      action: () => insertMarkdown('```\n', '\n```'),
+    },
+  ]
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Header */}
+      <div className="border-b border-[#222222] px-4 py-3 flex items-center gap-3">
+        <Input
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          placeholder="Document title"
+          className="text-base font-medium bg-transparent border-0 px-0 focus:ring-0 focus:border-0 text-white placeholder:text-[#333333]"
+        />
+        <div className="flex items-center gap-2 shrink-0">
+          {saveStatus === 'saving' && (
+            <span className="text-xs text-[#666666]">Saving...</span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="text-xs text-green-500">Saved</span>
+          )}
+          {error && <span className="text-xs text-red-400">{error}</span>}
+          <Button
+            onClick={handleSave}
+            size="sm"
+            className="gap-1.5"
+            disabled={saveStatus === 'saving'}
+          >
+            <Save size={13} />
+            Save
+          </Button>
+        </div>
+      </div>
+
+      {/* Tags */}
+      <div className="border-b border-[#222222] px-4 py-2 flex items-center gap-2">
+        <span className="text-xs text-[#444444] shrink-0">Tags</span>
+        <Input
+          value={tagsInput}
+          onChange={(e) => setTagsInput(e.target.value)}
+          placeholder="api, backend, notes (comma-separated)"
+          className="border-0 bg-transparent text-xs px-0 focus:ring-0 h-6 text-[#888888]"
+        />
+        {parsedTags.length > 0 && (
+          <div className="flex gap-1 shrink-0">
+            {parsedTags.slice(0, 4).map((tag) => (
+              <Badge key={tag}>{tag}</Badge>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Toolbar */}
+      <div className="border-b border-[#222222] px-3 py-1.5 flex items-center gap-0.5">
+        {toolbarActions.map(({ icon: Icon, label, action }) => (
+          <button
+            key={label}
+            onClick={action}
+            title={label}
+            type="button"
+            className="p-1.5 rounded text-[#666666] hover:text-white hover:bg-[#1a1a1a] transition-colors"
+          >
+            <Icon size={14} />
+          </button>
+        ))}
+      </div>
+
+      {/* Split pane */}
+      <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 border-r border-[#222222]">
+          <textarea
+            ref={textareaRef}
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            placeholder="Start writing in Markdown..."
+            className="w-full h-full resize-none bg-transparent text-[#e5e5e5] placeholder:text-[#333333] font-mono text-sm leading-relaxed p-4 outline-none"
+            spellCheck={false}
+          />
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {content ? (
+            <div className="prose-dark max-w-none">
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            </div>
+          ) : (
+            <p className="text-[#333333] text-sm italic">Preview will appear here</p>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
