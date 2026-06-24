@@ -3,7 +3,7 @@
 ## Chat Endpoint
 
 ### POST `/api/chat`
-Provides writing assistance using Llama 3.3 70B via the Groq API.
+Provides writing assistance using GPT-OSS 20B via the Groq API.
 
 #### Authentication
 - Requires active NextAuth session (`session.user.id`).

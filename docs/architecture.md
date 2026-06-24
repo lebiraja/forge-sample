@@ -5,7 +5,7 @@
 - **Authentication**: NextAuth.js (JWT-based credentials auth)
 - **Database**: MongoDB (via Mongoose)
 - **Styling**: Tailwind CSS & CSS Variables
-- **AI Integrations**: Groq API (Llama 3.3 70B model) for writing assistance
+- **AI Integrations**: Groq API (GPT-OSS 20B model) for writing assistance
 
 ## Key Components
 
