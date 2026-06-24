@@ -39,3 +39,4 @@ Thumbs.db
 # Testing
 coverage/
 .nyc_output/
+.playwright-mcp/
