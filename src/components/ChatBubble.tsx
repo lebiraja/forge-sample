@@ -14,12 +14,32 @@ import {
   Minimize2,
   Expand,
   FileText,
+  PencilLine,
+  Search,
+  List,
+  BookOpen,
+  Wrench,
 } from 'lucide-react'
+
+interface DocRef {
+  id: string
+  title: string
+  action: 'created' | 'updated'
+}
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
-  isDocument?: boolean
+  docRefs?: DocRef[]
+  toolsUsed?: string[]
+}
+
+const TOOL_LABELS: Record<string, { label: string; icon: typeof Search }> = {
+  list_docs: { label: 'Listed documents', icon: List },
+  search_docs: { label: 'Searched documents', icon: Search },
+  read_doc: { label: 'Read a document', icon: BookOpen },
+  create_doc: { label: 'Created a document', icon: PencilLine },
+  update_doc: { label: 'Updated a document', icon: PencilLine },
 }
 
 type PanelSize = 'normal' | 'expanded' | 'fullscreen'
@@ -53,7 +73,6 @@ export function ChatBubble() {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
   const [loading, setLoading] = useState(false)
-  const [creatingDoc, setCreatingDoc] = useState<number | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
 
@@ -95,33 +114,29 @@ export function ChatBubble() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ messages: next.map(({ role, content }) => ({ role, content })) }),
       })
-      const data = (await res.json()) as { content?: string; isDocument?: boolean; error?: string }
+      const data = (await res.json()) as {
+        content?: string
+        docRefs?: DocRef[]
+        toolsUsed?: string[]
+        error?: string
+      }
       if (data.content) {
-        setMessages([...next, { role: 'assistant', content: data.content, isDocument: data.isDocument }])
+        setMessages([
+          ...next,
+          {
+            role: 'assistant',
+            content: data.content,
+            docRefs: data.docRefs,
+            toolsUsed: data.toolsUsed,
+          },
+        ])
+      } else {
+        setMessages([...next, { role: 'assistant', content: data.error ?? 'Something went wrong. Try again.' }])
       }
     } catch {
       setMessages([...next, { role: 'assistant', content: 'Something went wrong. Try again.' }])
     } finally {
       setLoading(false)
-    }
-  }
-
-  async function createDocFromMessage(content: string, index: number) {
-    setCreatingDoc(index)
-    try {
-      // Extract title from first # heading or first line
-      const firstLine = content.split('\n').find((l) => l.trim())?.replace(/^#+\s*/, '') ?? 'Untitled'
-      const res = await fetch('/api/docs', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title: firstLine.slice(0, 100), content }),
-      })
-      const data = (await res.json()) as { data?: { _id: string }; error?: string }
-      if (data.data?._id) {
-        router.push(`/docs/${data.data._id}/edit`)
-      }
-    } finally {
-      setCreatingDoc(null)
     }
   }
 
@@ -242,53 +257,93 @@ export function ChatBubble() {
                 </div>
                 <div>
                   <p className="text-sm font-medium mb-1" style={{ color: 'var(--text)' }}>
-                    Ask me anything
+                    Your docs agent
                   </p>
-                  <p className="text-xs leading-relaxed" style={{ color: 'var(--text-muted)' }}>
-                    I can help you write, edit, or improve your docs.<br />
-                    Try: <em>&quot;Write a doc about REST APIs&quot;</em>
+                  <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--text-muted)' }}>
+                    I can read, search, write, and edit your documents for you.
                   </p>
+                  <div className="flex flex-col gap-1.5 text-left">
+                    {[
+                      'Write a doc about REST API best practices',
+                      'Summarize all my docs into a new one',
+                      'Find my doc about auth and add a security section',
+                    ].map((s) => (
+                      <button
+                        key={s}
+                        onClick={() => { setInput(s); inputRef.current?.focus() }}
+                        className="text-xs px-2.5 py-1.5 rounded-lg transition-colors text-left"
+                        style={{ background: 'var(--surface-2)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}
+                      >
+                        {s}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}
 
-            {messages.map((msg, i) => (
-              <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
-                <div
-                  className="max-w-[88%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
-                  style={
-                    msg.role === 'user'
-                      ? { background: 'var(--accent)', color: '#fff', borderBottomRightRadius: 4 }
-                      : { background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)', borderBottomLeftRadius: 4 }
-                  }
-                >
-                  {msg.role === 'user' ? (
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
-                  ) : (
-                    <div className="chat-prose">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+            {messages.map((msg, i) => {
+              const uniqueTools = msg.toolsUsed ? Array.from(new Set(msg.toolsUsed)) : []
+              return (
+                <div key={i} className={`flex flex-col ${msg.role === 'user' ? 'items-end' : 'items-start'}`}>
+                  {/* Agent activity — what tools were used */}
+                  {msg.role === 'assistant' && uniqueTools.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mb-1.5 max-w-[88%]">
+                      {uniqueTools.map((tool) => {
+                        const meta = TOOL_LABELS[tool] ?? { label: tool, icon: Wrench }
+                        const Icon = meta.icon
+                        return (
+                          <span
+                            key={tool}
+                            className="inline-flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded-md"
+                            style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)' }}
+                          >
+                            <Icon size={10} />
+                            {meta.label}
+                          </span>
+                        )
+                      })}
+                    </div>
+                  )}
+
+                  <div
+                    className="max-w-[88%] rounded-2xl px-4 py-2.5 text-sm leading-relaxed"
+                    style={
+                      msg.role === 'user'
+                        ? { background: 'var(--accent)', color: '#fff', borderBottomRightRadius: 4 }
+                        : { background: 'var(--surface-2)', color: 'var(--text)', border: '1px solid var(--border)', borderBottomLeftRadius: 4 }
+                    }
+                  >
+                    {msg.role === 'user' ? (
+                      <p className="whitespace-pre-wrap">{msg.content}</p>
+                    ) : (
+                      <div className="chat-prose">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Links to docs the agent created/updated */}
+                  {msg.role === 'assistant' && msg.docRefs && msg.docRefs.length > 0 && (
+                    <div className="flex flex-col gap-1.5 mt-2 max-w-[88%]">
+                      {msg.docRefs.map((ref) => (
+                        <button
+                          key={ref.id}
+                          onClick={() => { setOpen(false); setSize('normal'); router.push(`/docs/${ref.id}/edit`) }}
+                          className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-opacity hover:opacity-90 text-left"
+                          style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}
+                        >
+                          <FileText size={12} className="shrink-0" />
+                          <span className="truncate">
+                            {ref.action === 'created' ? 'Open' : 'View'} &ldquo;{ref.title}&rdquo; →
+                          </span>
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
-
-                {/* Create doc button for document responses */}
-                {msg.role === 'assistant' && msg.isDocument && (
-                  <button
-                    onClick={() => createDocFromMessage(msg.content, i)}
-                    disabled={creatingDoc === i}
-                    className="mt-2 flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg transition-opacity disabled:opacity-60"
-                    style={{ background: 'var(--accent-subtle)', color: 'var(--accent-text)', border: '1px solid var(--border)' }}
-                  >
-                    {creatingDoc === i ? (
-                      <Loader2 size={12} className="animate-spin" />
-                    ) : (
-                      <FileText size={12} />
-                    )}
-                    {creatingDoc === i ? 'Creating…' : 'Open in Editor →'}
-                  </button>
-                )}
-              </div>
-            ))}
+              )
+            })}
 
             {loading && (
               <div className="flex justify-start">
@@ -297,7 +352,7 @@ export function ChatBubble() {
                   style={{ background: 'var(--surface-2)', border: '1px solid var(--border)' }}
                 >
                   <Loader2 size={13} className="animate-spin" style={{ color: 'var(--accent)' }} />
-                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Thinking…</span>
+                  <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Working…</span>
                 </div>
               </div>
             )}
